@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 // CLIArgs holds all parsed cli flags
@@ -21,14 +22,25 @@ func Parse() (CLIArgs, error) {
 		"Valid yaml file holding input values.",
 		"Multiple value files are processed first to last.",
 	))
-	flag.Var(&f, "v", fmt.Sprintf("%s %s",
-		"Valid yaml file holding input values.",
+	flag.Var(&f, "v", fmt.Sprintf("%s %s %s",
+		"File holding input values.",
+		"Relative path will be changed to absolute path as \"${PWD}/filename\".",
 		"Multiple value files are processed first to last.",
 	))
 	flag.StringVar(&result.Output, "output", "",
 		"Absolute output path. Will default to \"${PWD}/values.yaml\".")
 	flag.Parse()
-	result.Files = f
+
+	absFiles := make([]string, 0, len(f))
+	for _, fileName := range f {
+		absFile, err := filepath.Abs(fileName)
+		if err != nil {
+			return CLIArgs{}, err
+		}
+		absFiles = append(absFiles, absFile)
+
+	}
+	result.Files = absFiles
 
 	err := result.validateOutput()
 	if err != nil {
