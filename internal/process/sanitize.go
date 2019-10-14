@@ -1,4 +1,4 @@
-package yamlinput
+package process
 
 import (
 	"bufio"
@@ -31,8 +31,6 @@ func (i *input) Sanitize(input []byte) ([]byte, error) {
 		}
 		res = append(res, matchTmpl...)
 	}
-	fmt.Printf("\"%+v\"\n", string(res[:len(res)-1]))
-
 	if err := scanner.Err(); err != nil {
 		return []byte{}, err
 	}
@@ -58,5 +56,5 @@ func (i *input) Desanitize(input []byte) ([]byte, error) {
 	if err := scanner.Err(); err != nil {
 		return []byte{}, err
 	}
-	return res, nil
+	return res[:len(res)-1], nil
 }

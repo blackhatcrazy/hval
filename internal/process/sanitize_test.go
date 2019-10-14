@@ -1,9 +1,9 @@
-package yamlinput_test
+package process_test
 
 import (
 	"bytes"
 	"fmt"
-	"hval/internal/yamlinput"
+	"hval/internal/process"
 	"strings"
 	"testing"
 )
@@ -47,43 +47,48 @@ normal: value`,
 func TestSanitize(t *testing.T) {
 	for _, test := range testValues {
 		debugSan := new(bytes.Buffer)
-		v := yamlinput.New(debugSan, true)
+		v := process.New(debugSan, true)
 		debugDesan := new(bytes.Buffer)
-		vOut := yamlinput.New(debugDesan, true)
+		vOut := process.New(debugDesan, true)
 		res, err := v.Sanitize([]byte(test.deSanitized))
 		if err != test.errSan {
 			if err.Error() != test.errSan.Error() {
-				t.Errorf("expected error does not match.\nResult: %+v \nExpect: %+v",
-					err, test.errSan)
+				t.Error(errOutput("error", err.Error(), test.errSan.Error()))
 			}
 		} else {
-			fmt.Println(res)
-			fmt.Println([]byte(test.sanitized))
 			if n := strings.Compare(string(res), test.sanitized); n != 0 {
-				t.Errorf("sanitization result does not match.\nResult: \"%+v\" \nExpect: \"%+v\"",
-					string(res), test.sanitized)
+				t.Error(errOutput("sanitization", string(res), test.sanitized))
 			}
-			if n := strings.Compare(string(res), debugSan.String()); n != 0 {
-				t.Errorf("sanitization debugin output does not match result.\nResult: \"%+v\" \nExpect: \"%+v\"",
-					debugSan.String(), string(res))
+			resNewline := string(append(res, '\n'))
+			if n := strings.Compare(resNewline, debugSan.String()); n != 0 {
+				t.Error(errOutput("debugging sanitization",
+					debugSan.String(),
+					resNewline,
+				))
 			}
 		}
 
 		resDesan, err := vOut.Desanitize([]byte(test.sanitized))
 		if err != test.errDesan {
 			if err.Error() != test.errDesan.Error() {
-				t.Errorf("expected error does not match.\nResult: %+v \nExpect: %+v",
-					err, test.errSan)
+				t.Error(errOutput("error", err.Error(), test.errDesan.Error()))
 			}
 		} else {
 			if n := strings.Compare(string(resDesan), test.deSanitized); n != 0 {
-				t.Errorf("unsanitization result does not match.\nResult: \"%+v\" \nExpect: \"%+v\"",
-					string(resDesan), test.deSanitized)
+				t.Error(errOutput("desanitization", string(resDesan), test.deSanitized))
 			}
-			if n := strings.Compare(string(resDesan), debugDesan.String()); n != 0 {
-				t.Errorf("sanitization debugin output does not match result.\nResult: \"%+v\" \nExpect: \"%+v\"",
-					debugDesan.String(), string(resDesan))
+			resDesanNewline := string(append(resDesan, '\n'))
+			if n := strings.Compare(resDesanNewline, debugDesan.String()); n != 0 {
+				t.Error(errOutput("debugging desanitization",
+					debugDesan.String(),
+					resDesanNewline,
+				))
 			}
 		}
 	}
+}
+
+func errOutput(name, result, expected string) error {
+	return fmt.Errorf("[MISMATCH] %s.\nResult: \"%s\" \nExpect: \"%s\"",
+		name, result, expected)
 }

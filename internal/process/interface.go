@@ -1,4 +1,4 @@
-package yamlinput
+package process
 
 import "io"
 

@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"hval/internal/process"
 	"hval/internal/render"
-	"hval/internal/yamlinput"
 	"hval/pkg/flags"
 	"hval/pkg/flatmap"
 	"log"
@@ -32,14 +32,11 @@ func main() {
 
 	args, err := flags.Parse()
 	check(err)
-	fmt.Println(args)
 	debug := new(bytes.Buffer)
-	input := yamlinput.New(debug, false)
-	files, err := input.Load(args.Files)
+	input := process.New(debug, false)
+	files, err := input.LoadInput(args.Files)
 	aggMap, err := aggregate(files)
 	check(err)
-	fmt.Println(files)
-	fmt.Println(aggMap)
 	infl, err := flatmap.Inflate(aggMap)
 	check(err)
 	inflBytes, err := yaml.Marshal(&infl)
