@@ -1,4 +1,12 @@
 t1: {{ printf "%s" .k2 }}
 t2: {{ .t1 }}{{ .t1 }}
-t3: {{ .t1 }}{{ .t1 }} bla
+t3: {{ .t1 }}{{ .t2 }} bla
+# will not work due to tab instead of double space
+# v4:
+# 	v41: test
+v4:
+  v41: test
+t4: {{ .v4 }}
+t5:
+  t51: {{ .t4 }}
 normal: value

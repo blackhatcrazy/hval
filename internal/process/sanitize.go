@@ -9,7 +9,7 @@ import (
 
 var keyIsTmpl = regexp.MustCompile(`({{.*}}.*:.*)`)
 var valIsTmpl = regexp.MustCompile(`(\w*: )({{.*}}.*)`)
-var sanTmpl = regexp.MustCompile("(\\w*: )`({{.*}}.*)`")
+var sanTmpl = regexp.MustCompile("(\\w*: )'({{.*}}.*)'")
 
 func (i *input) Sanitize(input []byte) ([]byte, error) {
 	res := make([]byte, 0)
@@ -22,7 +22,7 @@ func (i *input) Sanitize(input []byte) ([]byte, error) {
 			)
 		}
 		// stringify all occurances of template inputs
-		matchTmpl := valIsTmpl.ReplaceAll(line, []byte("${1}`${2}`"))
+		matchTmpl := valIsTmpl.ReplaceAll(line, []byte("${1}'${2}'"))
 		matchTmpl = append(matchTmpl, '\n')
 		if i.debug {
 			if _, err := i.debugger.Write(matchTmpl); err != nil {
@@ -57,4 +57,8 @@ func (i *input) Desanitize(input []byte) ([]byte, error) {
 		return []byte{}, err
 	}
 	return res[:len(res)-1], nil
+}
+
+func errTmplFormat(line string) error {
+	return fmt.Errorf("unexpected template format in line \"%s\"", line)
 }

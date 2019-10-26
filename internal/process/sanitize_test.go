@@ -20,9 +20,9 @@ t2: {{ .t1 }}{{ .t1 }}
 t3: {{ .t1 }}{{ .t1 }} additional text
 normal: value
 another: normal value`,
-		sanitized: `t1: ` + "`" + `{{ printf "%s" .k2 }}` + "`" + `
-t2: ` + "`" + `{{ .t1 }}{{ .t1 }}` + "`" + `
-t3: ` + "`" + `{{ .t1 }}{{ .t1 }} additional text` + "`" + `
+		sanitized: `t1: '{{ printf "%s" .k2 }}'
+t2: '{{ .t1 }}{{ .t1 }}'
+t3: '{{ .t1 }}{{ .t1 }} additional text'
 normal: value
 another: normal value`,
 		errSan:   nil,
@@ -33,9 +33,9 @@ another: normal value`,
 t2: {{ .t1 }}{{ .t1 }}
 t3: {{ .t1 }}{{ .t1 }} additional text
 normal: value`,
-		sanitized: `{{ .illegal }}: ` + "`" + `{{ printf "%s" .k2 }}` + "`" + `
-t2: ` + "`" + `{{ .t1 }}{{ .t1 }}` + "`" + `
-t3: ` + "`" + `{{ .t1 }}{{ .t1 }} additional text` + "`" + `
+		sanitized: `{{ .illegal }}: '{{ printf "%s" .k2 }}'
+t2: '{{ .t1 }}{{ .t1 }}'
+t3: '{{ .t1 }}{{ .t1 }} additional text'
 normal: value`,
 		errSan: fmt.Errorf("illegal key found in line \"%s\"",
 			`{{ .illegal }}: {{ printf "%s" .k2 }}`,

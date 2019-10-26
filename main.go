@@ -28,24 +28,29 @@ func aggregate(files map[string]map[string]interface{}) (
 	}
 	return aggregatedValues, nil
 }
+
 func main() {
 
 	args, err := flags.Parse()
 	check(err)
 	debug := new(bytes.Buffer)
-	input := process.New(debug, false)
-	files, err := input.LoadInput(args.Files)
+	yamlProcess := process.New(debug, false)
+	files, err := yamlProcess.LoadInput(args.Files)
+	check(err)
 	aggMap, err := aggregate(files)
 	check(err)
 	infl, err := flatmap.Inflate(aggMap)
 	check(err)
 	inflBytes, err := yaml.Marshal(&infl)
-	tmpl, err := input.Desanitize(inflBytes)
-	r, err := render.NewTemplate(tmpl, infl, aggMap)
-	check(err)
+	tmpl, err := yamlProcess.Desanitize(inflBytes)
 	output := new(bytes.Buffer)
-	check(r.Render(output))
+	check(render.Recursive(tmpl, infl, output, 10))
 	fmt.Println(output.String())
+	var out interface{}
+	check(yaml.Unmarshal(output.Bytes(), out))
+	res, err := yaml.Marshal(out)
+	check(err)
+	fmt.Println(string(res))
 
 }
 

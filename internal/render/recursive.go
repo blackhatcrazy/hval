@@ -3,7 +3,6 @@ package render
 import (
 	"bytes"
 	"fmt"
-	"hval/pkg/flatmap"
 	"io"
 	"text/template"
 )
@@ -13,18 +12,20 @@ type tmpl struct {
 	dataCurrent  []byte
 	dataPrevious []byte
 	input        interface{}
-	iteration    int
+	iteration    uint
 }
 
 func NewTemplate(
 	template []byte,
 	input interface{},
-	flatInput map[string]flatmap.MapEntry,
+	output io.Writer,
 ) (tmpl, error) {
 
-	if cyclicReferences(flatInput) {
-		return tmpl{}, fmt.Errorf("cyclic dependency in aggregated values")
-	}
+	// // TODO: implement optional check for cyclic references
+	// // potentially check on (flatInput map[string]flatmap.MapEntry)
+	// if cyclicReferences(flatInput) {
+	// 	return tmpl{}, fmt.Errorf("cyclic dependency in aggregated values")
+	// }
 
 	return tmpl{
 		err:          nil,
@@ -35,19 +36,27 @@ func NewTemplate(
 	}, nil
 }
 
-func cyclicReferences(input map[string]flatmap.MapEntry) bool {
-	return false
-}
+func Recursive(
+	template []byte,
+	input interface{},
+	output io.Writer,
+	maxIterations uint,
+) error {
+	t := tmpl{
+		err:          nil,
+		dataCurrent:  template,
+		dataPrevious: []byte{},
+		input:        input,
+		iteration:    0,
+	}
 
-func (t *tmpl) Render(w io.Writer) error {
-	// TODO: check for closed loops here?
-	for t.hasChanged() {
+	for t.hasChanged() || t.iteration < maxIterations {
 		t.render()
 		if t.err != nil {
 			return t.err
 		}
 	}
-	_, err := w.Write(t.dataCurrent)
+	_, err := output.Write(t.dataCurrent)
 	return err
 }
 
