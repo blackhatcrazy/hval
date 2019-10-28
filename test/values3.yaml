@@ -9,4 +9,13 @@ v4:
 t4: {{ .v4 }}
 t5:
   t51: {{ .t4 }}
+v5:
+- slice0
+- slice1
+t6: {{ .v5 }}
+v6:
+  v61:
+  - slice0
+  - slice1
+t7: {{ .v6 }}
 normal: value
