@@ -46,12 +46,11 @@ func main() {
 	output := new(bytes.Buffer)
 	fmt.Printf("%+v\n", infl)
 	check(render.Recursive(tmpl, infl, output, 10))
-	fmt.Println(output.String())
-	// var out interface{}
-	// check(yaml.Unmarshal(output.Bytes(), out))
-	// res, err := yaml.Marshal(out)
-	// check(err)
-	// fmt.Println(string(res))
+	var out interface{}
+	check(yaml.Unmarshal(output.Bytes(), &out))
+	res, err := yaml.Marshal(out)
+	check(err)
+	fmt.Println(string(res))
 
 }
 
