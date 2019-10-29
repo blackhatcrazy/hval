@@ -8,9 +8,10 @@ import (
 )
 
 var testInflate = []struct {
-	in  map[string]flatmap.MapEntry
-	res map[string]interface{}
-	err error
+	in       map[string]flatmap.MapEntry
+	res      flatmap.YamlMap
+	printRes string
+	err      error
 }{
 	{
 		in: map[string]flatmap.MapEntry{
@@ -18,8 +19,9 @@ var testInflate = []struct {
 				OrderedKey: []string{},
 				Value:      "val",
 			}},
-		res: map[string]interface{}{},
-		err: fmt.Errorf("no key to insert provided for value %v", "val"),
+		res:      flatmap.YamlMap{},
+		printRes: "{}",
+		err:      fmt.Errorf("no key to insert provided for value %v", "val"),
 	},
 	{
 		in: map[string]flatmap.MapEntry{
@@ -27,12 +29,13 @@ var testInflate = []struct {
 				OrderedKey: []string{"a", "b", "c"},
 				Value:      "val",
 			}},
-		res: map[string]interface{}{
-			"a": map[string]interface{}{
-				"b": map[string]interface{}{
+		res: flatmap.YamlMap{
+			"a": flatmap.YamlMap{
+				"b": flatmap.YamlMap{
 					"c": "val",
 				}}},
-		err: nil,
+		printRes: "{a: {b: {c: val}}}",
+		err:      nil,
 	},
 	{
 		in: map[string]flatmap.MapEntry{
@@ -42,15 +45,16 @@ var testInflate = []struct {
 			},
 			"a.b.d": flatmap.MapEntry{
 				OrderedKey: []string{"a", "b", "d"},
-				Value:      []string{"res1", "res2"},
+				Value:      flatmap.YamlSlice{"res1", "res2"},
 			}},
-		res: map[string]interface{}{
-			"a": map[string]interface{}{
-				"b": map[string]interface{}{
+		res: flatmap.YamlMap{
+			"a": flatmap.YamlMap{
+				"b": flatmap.YamlMap{
 					"c": "val",
-					"d": []string{"res1", "res2"},
+					"d": flatmap.YamlSlice{"res1", "res2"},
 				}}},
-		err: nil,
+		printRes: "{a: {b: {d: [res1, res2], c: val}}}",
+		err:      nil,
 	},
 	{
 		in: map[string]flatmap.MapEntry{
@@ -60,25 +64,26 @@ var testInflate = []struct {
 			},
 			"a.b.d": flatmap.MapEntry{
 				OrderedKey: []string{"a", "b", "d"},
-				Value:      []string{"res1", "res2"},
+				Value:      flatmap.YamlSlice{"res1", "res2"},
 			},
 			"x.b.d": flatmap.MapEntry{
 				OrderedKey: []string{"x", "b", "d"},
-				Value:      map[string]interface{}{"hello": "map"},
+				Value:      flatmap.YamlMap{"hello": "map"},
 			},
 		},
-		res: map[string]interface{}{
-			"a": map[string]interface{}{
-				"b": map[string]interface{}{
+		res: flatmap.YamlMap{
+			"a": flatmap.YamlMap{
+				"b": flatmap.YamlMap{
 					"c": "val",
-					"d": []string{"res1", "res2"},
+					"d": flatmap.YamlSlice{"res1", "res2"},
 				}},
-			"x": map[string]interface{}{
-				"b": map[string]interface{}{
-					"d": map[string]interface{}{"hello": "map"},
+			"x": flatmap.YamlMap{
+				"b": flatmap.YamlMap{
+					"d": flatmap.YamlMap{"hello": "map"},
 				}},
 		},
-		err: nil,
+		printRes: "{a: {b: {c: val, d: [res1, res2]}}, x: {b: {d: {hello: map}}}}",
+		err:      nil,
 	},
 }
 
@@ -86,14 +91,29 @@ func TestInflate(t *testing.T) {
 
 	for _, test := range testInflate {
 		res, err := flatmap.Inflate(test.in)
-		if err != test.err {
-			if err.Error() != test.err.Error() {
-				t.Errorf("expected error does not match.\nResult: %+v \nExpect: %+v", err, test.err)
-			}
+		if errDiff(test.err, err) {
+			t.Errorf("expected error does not match.\nResult: %s \nExpect: %s", err, test.err)
 		}
+
 		if !reflect.DeepEqual(res, test.res) {
 			t.Errorf("maps are not equal.\nResult: %+v \nExpect: %+v", res, test.res)
 		}
-
 	}
+	t.FailNow()
+}
+
+func errDiff(errExp, errRes error) bool {
+	if errExp == errRes {
+		return false
+	}
+	if errExp == nil && errRes != nil {
+		return true
+	}
+	if errExp != nil && errRes == nil {
+		return true
+	}
+	if errExp.Error() != errRes.Error() {
+		return true
+	}
+	return false
 }
