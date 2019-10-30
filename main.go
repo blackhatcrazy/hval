@@ -44,7 +44,6 @@ func main() {
 	inflBytes, err := yaml.Marshal(&infl)
 	tmpl, err := yamlProcess.Desanitize(inflBytes)
 	output := new(bytes.Buffer)
-	fmt.Printf("%+v\n", infl)
 	check(render.Recursive(tmpl, infl, output, 10))
 	var out interface{}
 	check(yaml.Unmarshal(output.Bytes(), &out))
